@@ -16,8 +16,8 @@ def main():
     train_base = load_base("train")
     train_static_0 = load_static_0("train")
 
-    print(train_base)
-    print(train_static_0)
+    print(train_base.shape)
+    print(train_static_0.shape)
 
     validate_depth0_table(train_base, "base")
     validate_depth0_table(train_static_0, "static_0")
@@ -25,6 +25,20 @@ def main():
     train_merged = join_static_0(train_base, train_static_0)
 
     print(train_merged.shape)
+
+    train_static_cb_0 = load_static_cb_0("train")
+
+    print(train_static_cb_0.shape)
+
+    validate_depth0_table(train_static_cb_0, "static_cb_0")
+
+    train_full = join_static_cb_0(train_merged, train_static_cb_0)
+
+    print(train_full.shape)
+
+    missing_data = train_full["riskassesment_940T"].isnull().sum()
+
+    print(f"Missing bureau data: {missing_data} rows ({missing_data / len(train_full):.2%})")
 
 
 # Returns the split directory which should 
@@ -67,6 +81,8 @@ def validate_depth0_table(df: pd.DataFrame, name: str) -> None:
     print(f"{name}: {len(df)} rows, no duplicate case_id, all is good!")
 
 # Join the static 0 table with the base table on case ID.
+# This is present only for about 70% of applicants.
+#   join_static_0(test_base, test_static_0)
 def join_static_0(base: pd.DataFrame, static_0: pd.DataFrame) -> pd.DataFrame:
     # Use Left Outer Join in order to use all keys from the left dataframe
     # and missing matches from the right dataframe are filled with NaN.
@@ -81,6 +97,32 @@ def join_static_0(base: pd.DataFrame, static_0: pd.DataFrame) -> pd.DataFrame:
         )
     
     return merged
+
+# Join the static cb 0 table with the base table on case ID.
+# About 30% of the rows will get NaN because these are the thin-file
+# people with no history.
+#   join_static_cb_0(train_static_cb_0, train_static_cb_0)
+def join_static_cb_0(base: pd.DataFrame, static_cb_0: pd.DataFrame) -> pd.DataFrame:
+    # Use Left Outer Join in order to use all keys from the left dataframe
+    # and missing matches from the right dataframe are filled with NaN.
+    merged = base.merge(static_cb_0, on="case_id", how="left")
+
+    # This is a row count check after merging just in case 
+    # duplicate keys slipped through the cracks.
+    if len(merged) != len(base):
+        raise ValueError(
+            f"Row count changed after join: base had {len(base)}, "
+            f"merged has {len(merged)}"
+        )
+    
+    return merged
+
+# Load the static cb 0 table.
+#   load_static_cb_0("train")
+def load_static_cb_0(split: str) -> pd.DataFrame:    
+    path = get_split_dir(split) / f"{split}_static_cb_0.csv"
+
+    return pd.read_csv(path)
 
 
 if __name__ == "__main__":
