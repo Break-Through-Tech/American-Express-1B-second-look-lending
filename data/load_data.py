@@ -17,7 +17,7 @@ def main():
     test_dataset = build_base_dataset("test")
 
     print(f"Train Dataset Shape: {train_dataset.shape}")
-    print(f"Train Dataset Shape: {test_dataset.shape}")
+    print(f"Test Dataset Shape: {test_dataset.shape}")
 
 # Load, valie and merge the base table with the depth 0 tables.
 def build_base_dataset(split: str) -> pd.DataFrame:
