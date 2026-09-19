@@ -36,10 +36,13 @@ def main():
 
     print(train_full.shape)
 
-    missing_data = train_full["riskassesment_940T"].isnull().sum()
-
+    # Check the thin file status by row existence. Applicants who has a bureau
+    # row can still have NaN in the riskassesment_940T column.
+    # Should be close to 30%.
+    has_bureau = train_full["case_id"].isin(train_static_cb_0["case_id"])
+    lacks_bureau = has_bureau == False
+    missing_data = lacks_bureau.sum()
     print(f"Missing bureau data: {missing_data} rows ({missing_data / len(train_full):.2%})")
-
 
 # Returns the split directory which should 
 # be either split = "train" or "test".
