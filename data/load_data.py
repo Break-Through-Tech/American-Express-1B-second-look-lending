@@ -22,17 +22,19 @@ def main():
     validate_depth0_table(train_base, "base")
     validate_depth0_table(train_static_0, "static_0")
 
+    train_merged = join_static_0(train_base, train_static_0)
+
+    print(train_merged.shape)
+
 
 # Returns the split directory which should 
 # be either split = "train" or "test".
 #   get_split_dir("train")
-#   get_split_dir("test")
 def get_split_dir(split: str) -> Path:
     return CSV_DIR / split
 
 # Load the base table, one row per loan, for
 # the given split.
-#   load_base("train")
 #   load_base("test")
 def load_base(split: str) -> pd.DataFrame:
     path = get_split_dir(split) / f"{split}_base.csv"
@@ -42,7 +44,6 @@ def load_base(split: str) -> pd.DataFrame:
 # Load and concatenate the static_0 table, which are
 # split into two files.
 #   load_static_0("train")
-#   load_static_0("test")
 def load_static_0(split: str) -> pd.DataFrame:
     split_dir = get_split_dir(split)
 
@@ -57,7 +58,6 @@ def load_static_0(split: str) -> pd.DataFrame:
 
 # Validate the depth 0 tables to make sure there are no duplicate IDs.
 #   validate_depth0_table(train_base, "base")
-#   validate_depth0_table(train_static_0, "static_0")
 def validate_depth0_table(df: pd.DataFrame, name: str) -> None:
     dupes = df["case_id"].duplicated().sum()
 
@@ -65,6 +65,22 @@ def validate_depth0_table(df: pd.DataFrame, name: str) -> None:
         raise ValueError(f"{name}: found {dupes} duplicate case_id values")
 
     print(f"{name}: {len(df)} rows, no duplicate case_id, all is good!")
+
+# Join the static 0 table with the base table on case ID.
+def join_static_0(base: pd.DataFrame, static_0: pd.DataFrame) -> pd.DataFrame:
+    # Use Left Outer Join in order to use all keys from the left dataframe
+    # and missing matches from the right dataframe are filled with NaN.
+    merged = base.merge(static_0, on="case_id", how="left")
+
+    # This is a row count check after merging just in case 
+    # duplicate keys slipped through the cracks.
+    if len(merged) != len(base):
+        raise ValueError(
+            f"Row count changed after join: base had {len(base)}, "
+            f"merged has {len(merged)}"
+        )
+    
+    return merged
 
 
 if __name__ == "__main__":
