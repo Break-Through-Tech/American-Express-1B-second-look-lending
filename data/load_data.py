@@ -13,36 +13,29 @@ DATA_DIR = Path(os.environ["DATA_DIR"])
 CSV_DIR = DATA_DIR / "csv_files"
 
 def main():
-    train_base = load_base("train")
-    train_static_0 = load_static_0("train")
+    train_dataset = build_base_dataset("train")
+    test_dataset = build_base_dataset("test")
 
-    print(train_base.shape)
-    print(train_static_0.shape)
+    print(f"Train Dataset Shape: {train_dataset.shape}")
+    print(f"Train Dataset Shape: {test_dataset.shape}")
 
-    validate_depth0_table(train_base, "base")
-    validate_depth0_table(train_static_0, "static_0")
+# Load, valie and merge the base table with the depth 0 tables.
+def build_base_dataset(split: str) -> pd.DataFrame:
+    # Load, validate base table.
+    base = load_base(split)
+    validate_depth0_table(base, "base")
 
-    train_merged = join_static_0(train_base, train_static_0)
+    # Load, validate, merge base with static0 table.
+    static_0 = load_static_0(split)
+    validate_depth0_table(static_0, "static_0")
+    merged = join_static_0(base, static_0)
 
-    print(train_merged.shape)
+    # Load, validate, merge base with static cb 0 table.
+    static_cb_0 = load_static_cb_0(split)
+    validate_depth0_table(static_cb_0, "static_cb_0")
+    merged = join_static_cb_0(merged, static_cb_0)
 
-    train_static_cb_0 = load_static_cb_0("train")
-
-    print(train_static_cb_0.shape)
-
-    validate_depth0_table(train_static_cb_0, "static_cb_0")
-
-    train_full = join_static_cb_0(train_merged, train_static_cb_0)
-
-    print(train_full.shape)
-
-    # Check the thin file status by row existence. Applicants who has a bureau
-    # row can still have NaN in the riskassesment_940T column.
-    # Should be close to 30%.
-    has_bureau = train_full["case_id"].isin(train_static_cb_0["case_id"])
-    lacks_bureau = has_bureau == False
-    missing_data = lacks_bureau.sum()
-    print(f"Missing bureau data: {missing_data} rows ({missing_data / len(train_full):.2%})")
+    return merged
 
 # Returns the split directory which should 
 # be either split = "train" or "test".
