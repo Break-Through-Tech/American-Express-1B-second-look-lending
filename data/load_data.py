@@ -13,14 +13,18 @@ load_dotenv()
 DATA_DIR = Path(os.environ["DATA_DIR"])
 CSV_DIR = DATA_DIR / "csv_files"
 
+# Directory for cached merged datasets.
+# Cached files should be ignored by git.
+CACHE_DIR = DATA_DIR/ "cache"
+
 def main():
     # Start the processing timer.
     process_start = time.perf_counter()
 
-    train_dataset = build_base_dataset("train")
-    # test_dataset = build_base_dataset("test")
+    train_dataset = load_or_build_dataset("train")
+    # test_dataset = load_or_build_dataset("test")
 
-    print(f"Train Dataset Shape: {train_dataset.shape}\n")
+    print(f"Train Dataset Shape: {train_dataset.shape}")
     # print(f"Test Dataset Shape: {test_dataset.shape}")
 
     # Stopping hte processing timer.
@@ -29,7 +33,26 @@ def main():
 
     print(f"Elapsed time: {elapsed_time} seconds\n")
 
-# Load, valie and merge the base table with the depth 0 tables.
+def get_cache_path(split: str) -> Path:
+    return CACHE_DIR / f"{split}_master.parquet"
+
+def load_or_build_dataset(split: str, force_rebuild: bool = False) -> pd.DataFrame:
+    cache_path = get_cache_path(split)
+
+    if cache_path.exists() and not force_rebuild:
+        print(f"Loading {split} from cache: {cache_path}")
+        return pd.read_parquet(cache_path)
+
+    print(f"Building {split} from raw CSVs if no cache found or force_rebuild=True...")
+    df = build_base_dataset(split)
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(cache_path, index=False)
+    print(f"Cached {split} to: {cache_path}")
+
+    return df
+
+# Load, validate and merge the base table with the depth 0 tables.
 def build_base_dataset(split: str) -> pd.DataFrame:
     print(f"Building the base dataset for {split}...\n")
 
@@ -79,6 +102,14 @@ def build_base_dataset(split: str) -> pd.DataFrame:
     # Make sure the thin-file flag column actually exists and has the
     # expected boolean values before moving on.
     print(f"Thin-file flag: {merged["is_thin_file"]}.\n")
+
+    # Load, aggregate (two parts with subrecord to contract to case), merge
+    # credit_bureau_a_2 table.
+    credit_bureau_a_2 = load_credit_bureau_a_2(split)
+    contract_agg = aggregate_credit_bureau_a_2_to_contract(credit_bureau_a_2)
+    bureau_a2_case_agg = aggregate_credit_bureau_a_2_to_case(contract_agg)
+    merged = join_credit_bureau_a_2(merged, bureau_a2_case_agg)
+    print("Merged credit_bureau_a2_contract_case_agg into base table.\n")
 
     print(f"Finished building the base dataset for {split}!\n")
 
@@ -339,6 +370,69 @@ def build_thin_file_flag(base: pd.DataFrame, credit_bureau_a_1: pd.DataFrame) ->
 #   join_credit_bureau_a_1(merged, bureau_agg)
 def join_credit_bureau_a_1(base: pd.DataFrame, bureau_agg: pd.DataFrame) -> pd.DataFrame:
     merged = base.merge(bureau_agg, on="case_id", how="left", validate="one_to_one")
+
+    if len(merged) != len(base):
+        raise ValueError(
+            f"Row count changed after join: base had {len(base)}, "
+            f"merged has {len(merged)}"
+        )
+
+    return merged
+
+# Load the credit_bureau_a_2 table. 
+# Depth 2, meaning case_id to num_group1 (contract) to 
+# num_group2 (payment/subrecord within that contract) which is the largest table.
+#   load_credit_bureau_a_2("train")
+def load_credit_bureau_a_2(split: str) -> pd.DataFrame:
+    path = get_split_dir(split) / f"{split}_credit_bureau_a_2.csv"
+
+    return pd.read_csv(path)
+
+# Part 1: Collapse credit_bureau_a_2 from subrecord level (case_id, num_group1, num_group2) to 
+# contract level (case_id, num_group1). One row per past credit 
+# contract by summarizing its payment history.
+#   aggregate_credit_bureau_a_2_to_contract(train_credit_bureau_a_2)
+def aggregate_credit_bureau_a_2_to_contract(df: pd.DataFrame) -> pd.DataFrame:
+    return (
+        df.groupby(["case_id", "num_group1"])
+        .agg(
+            contract_subrecord_count=("num_group2", "count"),
+            contract_overdue_sum=("pmts_overdue_1140A", sum_min_count),
+            contract_overdue_max=("pmts_overdue_1140A", "max"),
+            contract_overdue_valid_count=("pmts_overdue_1140A", "count"),
+        )
+        .reset_index()
+    )
+
+# Part 2: Collapse contract-level credit_bureau_a_2 summaries from (case_id, num_group1) 
+# to one row per case_id.
+#   aggregate_credit_bureau_a_2_to_case(contract_agg)
+def aggregate_credit_bureau_a_2_to_case(contract_agg: pd.DataFrame) -> pd.DataFrame:
+    case_agg = (
+        contract_agg.groupby("case_id")
+        .agg(
+            bureau_a2_contract_count=("num_group1", "count"),
+            bureau_a2_record_count=("contract_subrecord_count", "sum"),
+            bureau_a2_overdue_sum=("contract_overdue_sum", sum_min_count),
+            bureau_a2_overdue_max=("contract_overdue_max", "max"),
+            bureau_a2_overdue_valid_count=("contract_overdue_valid_count", "sum"),
+        )
+        .reset_index()
+    )
+
+    # Weighted mean, computed after. aggregation. This is the total overdue divided by
+    # total valid records and not the average of each contract's own mean.
+    # This avoids overweighting contracts that happen to have fewer subrecords.
+    case_agg["bureau_a2_overdue_mean"] = (
+        case_agg["bureau_a2_overdue_sum"] / case_agg["bureau_a2_overdue_valid_count"]
+    )
+
+    return case_agg
+
+# Join both aggregated credit_bureau_a_2 parts into the merged base table.
+#   join_credit_bureau_a_2(merged, bureau_a2_case_agg)
+def join_credit_bureau_a_2(base: pd.DataFrame, bureau_a2_case_agg: pd.DataFrame) -> pd.DataFrame:
+    merged = base.merge(bureau_a2_case_agg, on="case_id", how="left", validate="one_to_one")
 
     if len(merged) != len(base):
         raise ValueError(
