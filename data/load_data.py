@@ -20,40 +20,55 @@ def main():
     train_dataset = build_base_dataset("train")
     # test_dataset = build_base_dataset("test")
 
-    print(f"Train Dataset Shape: {train_dataset.shape}")
+    print(f"Train Dataset Shape: {train_dataset.shape}\n")
     # print(f"Test Dataset Shape: {test_dataset.shape}")
 
+    # Stopping hte processing timer.
     process_end = time.perf_counter()
-
     elapsed_time = process_end - process_start
 
-    print(f"Elapsed time: {elapsed_time} seconds")
+    print(f"Elapsed time: {elapsed_time} seconds\n")
 
 # Load, valie and merge the base table with the depth 0 tables.
 def build_base_dataset(split: str) -> pd.DataFrame:
+    print(f"Building the base dataset for {split}...\n")
+
     # Load, validate base table.
     base = load_base(split)
     validate_depth0_table(base, "base")
+    print("Loaded base table.\n")
 
     # Load, validate, merge base with static0 table.
     static_0 = load_static_0(split)
     validate_depth0_table(static_0, "static_0")
     merged = join_static_0(base, static_0)
+    print(f"Merged static_0 into base table.\n")
 
     # Load, validate, merge base with static cb 0 table.
     static_cb_0 = load_static_cb_0(split)
     validate_depth0_table(static_cb_0, "static_cb_0")
     merged = join_static_cb_0(merged, static_cb_0)
+    print(f"Merged static_cb_0 into base table.\n")
 
     # Load, aggregate, merge tax_registry_a_1 table.
     tax_registry_a_1 = load_tax_registry_a_1(split)
     tax_registry_agg = aggregate_tax_registry_a_1(tax_registry_a_1)
     merged = join_tax_registry_a_1(merged, tax_registry_agg)
+    print(f"Merged tax_registry_a_1 into base table.\n")
 
     # Load, aggregate, merge person_1 table.
     person_1 = load_person_1(split)
     person_agg = aggregate_person_1(person_1)
     merged = join_person_1(merged, person_agg)
+    print(f"Merged person_1 into base table.\n")
+
+    # Load, aggregate, merge applprev_1 table.
+    applprev_1 = load_applprev_1(split)
+    applprev_agg = aggregate_applprev_1(applprev_1)
+    merged = join_applprev_1(merged, applprev_agg)
+    print(f"Merged applprev_1 into base table.\n")
+
+    print(f"Finished building the base dataset for {split}!\n")
 
     return merged
 
@@ -212,6 +227,52 @@ def aggregate_person_1(df: pd.DataFrame) -> pd.DataFrame:
 #   join_person_1(merged, person_agg)
 def join_person_1(base: pd.DataFrame, person_agg: pd.DataFrame) -> pd.DataFrame:
     merged = base.merge(person_agg, on="case_id", how="left", validate="one_to_one")
+
+    if len(merged) != len(base):
+        raise ValueError(
+            f"Row count changed after join: base had {len(base)}, "
+            f"merged has {len(merged)}"
+        )
+
+    return merged
+
+# Load the applprev_1 table.
+# Depth 1, meaning 0 to4 rows per case_id for the applicant's
+# own previous applications to this lender.
+#   load_applprev_1("train")
+def load_applprev_1(split: str) -> pd.DataFrame:
+    path = get_split_dir(split) / f"{split}_applprev_1.csv"
+
+    return pd.read_csv(path)
+
+# Aggregate applprev_1 to one row per case_id.
+#   aggregate_applprev_1(train_applprev_1)
+def aggregate_applprev_1(df: pd.DataFrame) -> pd.DataFrame:
+    # Make a copy so as to not mutate the original DataFrame.
+    df = df.copy()
+    # Conver the string dates to real datetimes so our min/max will
+    # sort chronologically and not alphabetically.
+    # Any value that cannot be parsed will become NaT, Not a Time,
+    # instead of crashing.
+    df["approvaldate_319D"] = pd.to_datetime(df["approvaldate_319D"], errors="coerce")
+
+    return (
+        df.groupby("case_id")
+        .agg(
+            prev_application_count=("num_group1", "count"),
+            prev_credit_amount_sum=("credamount_590A", sum_min_count),
+            prev_credit_amount_mean=("credamount_590A", "mean"),
+            prev_credit_amount_max=("credamount_590A", "max"),
+            prev_approval_date_min=("approvaldate_319D", "min"),
+            prev_approval_date_max=("approvaldate_319D", "max"),
+        )
+        .reset_index()
+    )
+
+# Join the aggregated applprev_1 onto the merged base table.
+#   join_applprev_1(merged, applprev_agg)
+def join_applprev_1(base: pd.DataFrame, applprev_agg: pd.DataFrame) -> pd.DataFrame:
+    merged = base.merge(applprev_agg, on="case_id", how="left", validate="one_to_one")
 
     if len(merged) != len(base):
         raise ValueError(
