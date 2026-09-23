@@ -82,7 +82,10 @@ def validate_depth0_table(df: pd.DataFrame, name: str) -> None:
 def join_static_0(base: pd.DataFrame, static_0: pd.DataFrame) -> pd.DataFrame:
     # Use Left Outer Join in order to use all keys from the left dataframe
     # and missing matches from the right dataframe are filled with NaN.
-    merged = base.merge(static_0, on="case_id", how="left")
+    # The one to one validation checks that the join keys are unique on
+    # both sides and notifies immediately if, for example, a duplicate 
+    # case ID snuck in.
+    merged = base.merge(static_0, on="case_id", how="left", validate="one_to_one")
 
     # This is a row count check after merging just in case 
     # duplicate keys slipped through the cracks.
