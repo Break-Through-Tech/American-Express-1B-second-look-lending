@@ -90,7 +90,7 @@ def join_static_0(base: pd.DataFrame, static_0: pd.DataFrame) -> pd.DataFrame:
     # and missing matches from the right dataframe are filled with NaN.
     # The one to one validation checks that the join keys are unique on
     # both sides and notifies immediately if, for example, a duplicate 
-    # case ID snuck in.
+    # case_id snuck in.
     merged = base.merge(static_0, on="case_id", how="left", validate="one_to_one")
 
     # This is a row count check after merging just in case 
@@ -129,6 +129,40 @@ def load_static_cb_0(split: str) -> pd.DataFrame:
 
     return pd.read_csv(path)
 
+# Load the tax_registry_a_1 table. 
+# Depth 1, meaning many rows per case_id.
+#   load_tax_registry_a_1("train")
+def load_tax_registry_a_1(split: str) -> pd.DataFrame:
+    path = get_split_dir(split) / f"{split}_tax_registry_a_1.csv"
+
+    return pd.read_csv(path)
+
+# Aggregate tax_registry_a_1 to one row per case_id.
+#   aggregate_tax_registry_a_1(train_tax_registry_a_1)
+def aggregate_tax_registry_a_1(df: pd.DataFrame) -> pd.DataFrame:
+    return (
+        df.groupby("case_id")
+        .agg(
+            tax_record_count=("num_group1", "count"),
+            tax_amount_sum=("amount_4527230A", sum_min_count),
+            tax_amount_mean=("amount_4527230A", "mean"),
+            tax_amount_max=("amount_4527230A", "max"),
+        )
+        .reset_index()
+    )
+
+# Join the aggregated tax_registry_a_1 onto the merged base table.
+#   join_tax_registry_a_1(merged, tax_registry_agg)
+def join_tax_registry_a_1(base: pd.DataFrame, tax_registry_agg: pd.DataFrame) -> pd.DataFrame:
+    merged = base.merge(tax_registry_agg, on="case_id", how="left", validate="one_to_one")
+
+    if len(merged) != len(base):
+        raise ValueError(
+            f"Row count changed after join: base had {len(base)}, "
+            f"merged has {len(merged)}"
+        )
+
+    return merged
 
 if __name__ == "__main__":
     main()
