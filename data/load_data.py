@@ -35,6 +35,11 @@ def build_base_dataset(split: str) -> pd.DataFrame:
     validate_depth0_table(static_cb_0, "static_cb_0")
     merged = join_static_cb_0(merged, static_cb_0)
 
+    # Load, aggregate, merge tax_registry_a_1 table.
+    tax_registry_a_1 = load_tax_registry_a_1(split)
+    tax_registry_agg = aggregate_tax_registry_a_1(tax_registry_a_1)
+    merged = join_tax_registry_a_1(merged, tax_registry_agg)
+
     return merged
 
 # Returns the split directory which should 
