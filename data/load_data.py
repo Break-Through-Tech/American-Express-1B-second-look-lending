@@ -42,31 +42,43 @@ def build_base_dataset(split: str) -> pd.DataFrame:
     static_0 = load_static_0(split)
     validate_depth0_table(static_0, "static_0")
     merged = join_static_0(base, static_0)
-    print(f"Merged static_0 into base table.\n")
+    print("Merged static_0 into base table.\n")
 
     # Load, validate, merge base with static cb 0 table.
     static_cb_0 = load_static_cb_0(split)
     validate_depth0_table(static_cb_0, "static_cb_0")
     merged = join_static_cb_0(merged, static_cb_0)
-    print(f"Merged static_cb_0 into base table.\n")
+    print("Merged static_cb_0 into base table.\n")
 
     # Load, aggregate, merge tax_registry_a_1 table.
     tax_registry_a_1 = load_tax_registry_a_1(split)
     tax_registry_agg = aggregate_tax_registry_a_1(tax_registry_a_1)
     merged = join_tax_registry_a_1(merged, tax_registry_agg)
-    print(f"Merged tax_registry_a_1 into base table.\n")
+    print("Merged tax_registry_a_1 into base table.\n")
 
     # Load, aggregate, merge person_1 table.
     person_1 = load_person_1(split)
     person_agg = aggregate_person_1(person_1)
     merged = join_person_1(merged, person_agg)
-    print(f"Merged person_1 into base table.\n")
+    print("Merged person_1 into base table.\n")
 
     # Load, aggregate, merge applprev_1 table.
     applprev_1 = load_applprev_1(split)
     applprev_agg = aggregate_applprev_1(applprev_1)
     merged = join_applprev_1(merged, applprev_agg)
-    print(f"Merged applprev_1 into base table.\n")
+    print("Merged applprev_1 into base table.\n")
+
+    # Load, aggregate, merge credit_bureau_a_1 table.
+    credit_bureau_a_1 = load_credit_bureau_a_1(split)
+    bureau_agg = aggregate_credit_bureau_a_1(credit_bureau_a_1)
+    merged = join_credit_bureau_a_1(merged, bureau_agg)
+    print("Merged credit_bureau_a_1 into base table.\n")
+
+    # Thin-file flag with zero rows in the raw (pre-aggregation) bureau table.
+    merged["is_thin_file"] = build_thin_file_flag(base, credit_bureau_a_1)
+    # Make sure the thin-file flag column actually exists and has the
+    # expected boolean values before moving on.
+    print(f"Thin-file flag: {merged["is_thin_file"]}.\n")
 
     print(f"Finished building the base dataset for {split}!\n")
 
@@ -273,6 +285,60 @@ def aggregate_applprev_1(df: pd.DataFrame) -> pd.DataFrame:
 #   join_applprev_1(merged, applprev_agg)
 def join_applprev_1(base: pd.DataFrame, applprev_agg: pd.DataFrame) -> pd.DataFrame:
     merged = base.merge(applprev_agg, on="case_id", how="left", validate="one_to_one")
+
+    if len(merged) != len(base):
+        raise ValueError(
+            f"Row count changed after join: base had {len(base)}, "
+            f"merged has {len(merged)}"
+        )
+
+    return merged
+
+# Load and concatenate the credit_bureau_a_1 table, split into two files.
+# This is the most important signal table where the thin-file applicants
+# have zero rows in.
+#   load_credit_bureau_a_1("train")
+def load_credit_bureau_a_1(split: str) -> pd.DataFrame:
+    split_dir = get_split_dir(split)
+
+    part_0 = pd.read_csv(split_dir / f"{split}_credit_bureau_a_1_0.csv")
+    part_1 = pd.read_csv(split_dir / f"{split}_credit_bureau_a_1_1.csv")
+
+    return pd.concat([part_0, part_1], ignore_index=True)
+
+# Aggregate credit_bureau_a_1 to one row per case_id.
+#   aggregate_credit_bureau_a_1(train_credit_bureau_a_1)
+def aggregate_credit_bureau_a_1(df: pd.DataFrame) -> pd.DataFrame:
+    return (
+        df.groupby("case_id")
+        .agg(
+            bureau_contract_count=("num_group1", "count"),
+            bureau_credit_amount_sum=("credamount_770A", sum_min_count),
+            bureau_credit_amount_mean=("credamount_770A", "mean"),
+            bureau_credit_amount_max=("credamount_770A", "max"),
+            bureau_overdue_amount_mean=("overdueamountmax_950A", "mean"),
+            bureau_overdue_amount_max=("overdueamountmax_950A", "max"),
+            bureau_dpd_max=("pmts_dpdvalue_108P", "max"),
+            bureau_dpd_mean=("pmts_dpdvalue_108P", "mean"),
+        )
+        .reset_index()
+    )
+
+# Helper to compute the thin-file flag.
+# True if this case_id has zero rows in the raw pre-aggregation credit_bureau_a_1 table, 
+# meaning no bureau history at all.
+#   build_thin_file_flag(train_base, train_credit_bureau_a_1)
+def build_thin_file_flag(base: pd.DataFrame, credit_bureau_a_1: pd.DataFrame) -> pd.Series:
+    has_bureau = base["case_id"].isin(credit_bureau_a_1["case_id"])
+
+    is_thin_file = has_bureau == False
+
+    return is_thin_file
+
+# Join the aggregated credit_bureau_a_1 onto the merged base table.
+#   join_credit_bureau_a_1(merged, bureau_agg)
+def join_credit_bureau_a_1(base: pd.DataFrame, bureau_agg: pd.DataFrame) -> pd.DataFrame:
+    merged = base.merge(bureau_agg, on="case_id", how="left", validate="one_to_one")
 
     if len(merged) != len(base):
         raise ValueError(
