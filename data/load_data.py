@@ -51,6 +51,12 @@ def load_base(split: str) -> pd.DataFrame:
 
     return pd.read_csv(path)
 
+# Sum a group but return NaN, not 0, if every value in the
+# group is NaN. Prevents "no records" from looking identical
+# to "records summed to zero".
+def sum_min_count(x: pd.Series):
+    return x.sum(min_count=1)
+
 # Load and concatenate the static_0 table, which are
 # split into two files.
 #   load_static_0("train")
