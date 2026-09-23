@@ -22,10 +22,10 @@ def main():
     process_start = time.perf_counter()
 
     train_dataset = load_or_build_dataset("train")
-    # test_dataset = load_or_build_dataset("test")
+    test_dataset = load_or_build_dataset("test")
 
-    print(f"Train Dataset Shape: {train_dataset.shape}")
-    # print(f"Test Dataset Shape: {test_dataset.shape}")
+    print(f"Train Dataset Shape: {train_dataset.shape}\n")
+    print(f"Test Dataset Shape: {test_dataset.shape}\n")
 
     # Stopping hte processing timer.
     process_end = time.perf_counter()
@@ -41,9 +41,11 @@ def load_or_build_dataset(split: str, force_rebuild: bool = False) -> pd.DataFra
 
     if cache_path.exists() and not force_rebuild:
         print(f"Loading {split} from cache: {cache_path}")
+
         return pd.read_parquet(cache_path)
 
     print(f"Building {split} from raw CSVs if no cache found or force_rebuild=True...")
+    
     df = build_base_dataset(split)
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
