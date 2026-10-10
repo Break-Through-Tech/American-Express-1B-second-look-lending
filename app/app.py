@@ -20,5 +20,31 @@ bundle = load_model_bundle()
 model = bundle["model"]
 features = bundle["features"]
 
-st.write("Model loaded. It expects these inputs:")
-st.write(features)
+st.subheader("Applicant details")
+
+# Each widget returns its current value; Streamlit reruns the script
+# whenever any widget changes.
+income = st.number_input(
+    "Stated annual income ($)", min_value=0, max_value=500_000, value=30_000, step=1_000
+)
+credit_amount = st.number_input(
+    "Requested credit amount ($)", min_value=0, max_value=500_000, value=20_000, step=1_000
+)
+annuity = st.number_input(
+    "Periodic loan payment ($)", min_value=0, max_value=50_000, value=800, step=50
+)
+days_employed = st.number_input(
+    "Days employed", min_value=0, max_value=20_000, value=1_000, step=100
+)
+is_thin_file = st.checkbox("Thin-file applicant, meaning no credit bureau history")
+
+st.write("You entered:")
+st.write(
+    {
+        "income": income,
+        "credit_amount": credit_amount,
+        "annuity": annuity,
+        "days_employed": days_employed,
+        "is_thin_file": is_thin_file,
+    }
+)
