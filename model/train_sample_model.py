@@ -1,5 +1,6 @@
 import sys
 import lightgbm as lgb
+import joblib
 from pathlib import Path
 from sklearn.metrics import roc_auc_score
 
@@ -81,12 +82,30 @@ def evaluate_model(model, val_df):
 
     return overall
 
+# Save the model together with its feature list so the app reads the
+# expected inputs from the file instead of guessing.
+#   save_model(model)
+def save_model(model):
+    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump({"model": model, "features": FEATURES}, MODEL_PATH)
+    print(f"Saved model to: {MODEL_PATH}")
+
 def main():
     train = load_data.load_or_build_dataset("train")
     fit_df, val_df = split_by_time(train)
 
     model = train_model(fit_df)
-    evaluate_model(model, val_df)
+    save_model(model)
+
+    # Reload from disk and compare predictions on 1,000 loans.
+    saved = joblib.load(MODEL_PATH)
+    X = prepare_features(val_df.head(1000))
+    before = model.predict_proba(X)[:, 1]
+    after = saved["model"].predict_proba(X)[:, 1]
+
+    print("Identical predictions:", (before == after).all())
+    print("Saved features:", saved["features"])
+    print(f"File size: {MODEL_PATH.stat().st_size / 1024:.0f} KB")
 
 if __name__ == "__main__":
     main()
