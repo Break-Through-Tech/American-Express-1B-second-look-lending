@@ -37,12 +37,26 @@ def prepare_features(df):
 
     return X
 
+# Split the merged table by time and not randomly. 
+# Earlier weeks to fit the model, later weeks to check it. 
+#   split_by_time(train)
+def split_by_time(df):
+    fit_df = df[df["WEEK_NUM"] < VALIDATION_START_WEEK]
+    val_df = df[df["WEEK_NUM"] >= VALIDATION_START_WEEK]
+
+    return (fit_df, val_df)
+
 def main():
     train = load_data.load_or_build_dataset("train")
-    X = prepare_features(train)
-    print(X.dtypes)
-    print(X.head())
-    print(f"Shape: {X.shape}")
+    fit_df, val_df = split_by_time(train)
+
+    print(f"Fit: {len(fit_df)} rows, weeks {fit_df['WEEK_NUM'].min()}-{fit_df['WEEK_NUM'].max()}")
+    print(f"Val: {len(val_df)} rows, weeks {val_df['WEEK_NUM'].min()}-{val_df['WEEK_NUM'].max()}")
+
+    print("\nDefault rate by thin-file (fit):")
+    print(fit_df.groupby("is_thin_file")["target"].mean())
+    print("\nDefault rate by thin-file (val):")
+    print(val_df.groupby("is_thin_file")["target"].mean())
 
 if __name__ == "__main__":
     main()
