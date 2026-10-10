@@ -2,6 +2,7 @@ from pathlib import Path
 
 import joblib
 import streamlit as st
+import pandas as pd
 
 # The model file sits next to this script. Building the path from
 # __file__ means it works locally and on Streamlit Cloud.
@@ -48,3 +49,20 @@ st.write(
         "is_thin_file": is_thin_file,
     }
 )
+
+# Build one row in the exact order the model was trained on. The dict
+# keys must match the feature names saved inside the model bundle.
+input_values = {
+    "mainoccupationinc_384A": income,
+    "credamount_770A": credit_amount,
+    "annuity_780A": annuity,
+    "days_employed_700P": days_employed,
+    "is_thin_file": int(is_thin_file),  # True/False -> 1/0, same as training
+}
+input_row = pd.DataFrame([input_values])[features]
+
+# predict_proba returns [P(repay), P(default)]; [0, 1] picks the PD.
+predicted_pd = model.predict_proba(input_row)[0, 1]
+
+st.subheader("Prediction")
+st.metric("Predicted probability of default (PD)", f"{predicted_pd:.1%}")
