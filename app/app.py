@@ -76,10 +76,24 @@ APPROVAL_THRESHOLD = GAIN_ON_REPAID / (GAIN_ON_REPAID + LOSS_ON_DEFAULT)  # 0.20
 
 expected_value = (1 - predicted_pd) * GAIN_ON_REPAID - predicted_pd * LOSS_ON_DEFAULT
 
-st.subheader("Decision")
-if predicted_pd < APPROVAL_THRESHOLD:
-    st.success(f"APPROVE (PD is under the {APPROVAL_THRESHOLD:.0%} cutoff)")
-else:
-    st.error(f"DENY (PD is at or above the {APPROVAL_THRESHOLD:.0%} cutoff)")
+# Sidebar controls: the cutoffs a lender could tune.
+st.sidebar.header("Policy settings")
+established_threshold = st.sidebar.slider(
+    "Established cutoff (approve if PD below)", 0.05, 0.40, APPROVAL_THRESHOLD, 0.01
+)
+thin_file_threshold = st.sidebar.slider(
+    "Thin-file cutoff (approve if PD below)", 0.05, 0.40, APPROVAL_THRESHOLD, 0.01
+)
 
-st.metric("Expected profit if approved", f"${expected_value:,.0f}")
+# Pick the cutoff that applies to this applicant's segment.
+threshold = thin_file_threshold if is_thin_file else established_threshold
+
+st.subheader("Decision")
+if predicted_pd < threshold:
+    st.success(f"APPROVE (PD is under the {threshold:.0%} cutoff)")
+else:
+    st.error(f"DENY (PD is at or above the {threshold:.0%} cutoff)")
+
+# Format negatives as -$555, not $-555.
+profit_text = f"-${abs(expected_value):,.0f}" if expected_value < 0 else f"${expected_value:,.0f}"
+st.metric("Expected profit if approved", profit_text)
