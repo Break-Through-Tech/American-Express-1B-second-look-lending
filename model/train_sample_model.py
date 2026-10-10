@@ -1,6 +1,7 @@
 import sys
 import lightgbm as lgb
 from pathlib import Path
+from sklearn.metrics import roc_auc_score
 
 # Have the ability to import ./data/load_data.py 
 # from this script.
@@ -61,17 +62,31 @@ def train_model(fit_df):
 
     return model
 
+# Score the model on the validation weeks with AUC, overall and per
+# segment. Returns the overall AUC.
+#   evaluate_model(model, val_df)
+def evaluate_model(model, val_df):
+    val_pd = model.predict_proba(prepare_features(val_df))[:, 1]
+    y = val_df["target"].to_numpy()
+
+    overall = roc_auc_score(y, val_pd)
+    print(f"Validation AUC (all):         {overall:.4f}")
+
+    # The project requires per-segment reporting: an overall number can
+    # hide a weak thin-file result.
+    for flag, name in [(False, "established"), (True, "thin-file")]:
+        mask = (val_df["is_thin_file"] == flag).to_numpy()
+        seg_auc = roc_auc_score(y[mask], val_pd[mask])
+        print(f"Validation AUC ({name:<11}): {seg_auc:.4f}  (n={mask.sum()})")
+
+    return overall
+
 def main():
     train = load_data.load_or_build_dataset("train")
     fit_df, val_df = split_by_time(train)
 
     model = train_model(fit_df)
-    print("Model trained.")
-
-    # PD = probability of default. [:, 1] picks the "default" column.
-    sample_pd = model.predict_proba(prepare_features(val_df.head(5)))[:, 1]
-    print("PD for first 5 validation loans:", sample_pd.round(3))
-    print("Actual outcomes:                ", val_df["target"].head(5).tolist())
+    evaluate_model(model, val_df)
 
 if __name__ == "__main__":
     main()
