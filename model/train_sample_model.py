@@ -1,4 +1,5 @@
 import sys
+import lightgbm as lgb
 from pathlib import Path
 
 # Have the ability to import ./data/load_data.py 
@@ -46,17 +47,31 @@ def split_by_time(df):
 
     return (fit_df, val_df)
 
+# Train a LightGBM classifier on the fit set. Returns the fitted model.
+#   train_model(fit_df)
+def train_model(fit_df):
+    model = lgb.LGBMClassifier(
+        n_estimators=200, # Number of small trees to build.
+        learning_rate=0.05, # How much each tree is allowed to correct.
+        num_leaves=31, # How detailed each tree can get.
+        random_state=42, # Same result every run.
+        verbose=-1, # Silence LightGBM's progress chatter.
+    )
+    model.fit(prepare_features(fit_df), fit_df["target"])
+
+    return model
+
 def main():
     train = load_data.load_or_build_dataset("train")
     fit_df, val_df = split_by_time(train)
 
-    print(f"Fit: {len(fit_df)} rows, weeks {fit_df['WEEK_NUM'].min()}-{fit_df['WEEK_NUM'].max()}")
-    print(f"Val: {len(val_df)} rows, weeks {val_df['WEEK_NUM'].min()}-{val_df['WEEK_NUM'].max()}")
+    model = train_model(fit_df)
+    print("Model trained.")
 
-    print("\nDefault rate by thin-file (fit):")
-    print(fit_df.groupby("is_thin_file")["target"].mean())
-    print("\nDefault rate by thin-file (val):")
-    print(val_df.groupby("is_thin_file")["target"].mean())
+    # PD = probability of default. [:, 1] picks the "default" column.
+    sample_pd = model.predict_proba(prepare_features(val_df.head(5)))[:, 1]
+    print("PD for first 5 validation loans:", sample_pd.round(3))
+    print("Actual outcomes:                ", val_df["target"].head(5).tolist())
 
 if __name__ == "__main__":
     main()
