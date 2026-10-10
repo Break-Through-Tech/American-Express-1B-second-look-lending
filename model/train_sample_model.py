@@ -90,22 +90,15 @@ def save_model(model):
     joblib.dump({"model": model, "features": FEATURES}, MODEL_PATH)
     print(f"Saved model to: {MODEL_PATH}")
 
+# Train the sample model end to end: load data, split by time, fit,
+# evaluate and save for the Streamlit app.
 def main():
     train = load_data.load_or_build_dataset("train")
     fit_df, val_df = split_by_time(train)
 
     model = train_model(fit_df)
+    evaluate_model(model, val_df)
     save_model(model)
-
-    # Reload from disk and compare predictions on 1,000 loans.
-    saved = joblib.load(MODEL_PATH)
-    X = prepare_features(val_df.head(1000))
-    before = model.predict_proba(X)[:, 1]
-    after = saved["model"].predict_proba(X)[:, 1]
-
-    print("Identical predictions:", (before == after).all())
-    print("Saved features:", saved["features"])
-    print(f"File size: {MODEL_PATH.stat().st_size / 1024:.0f} KB")
 
 if __name__ == "__main__":
     main()
