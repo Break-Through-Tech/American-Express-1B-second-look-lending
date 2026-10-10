@@ -66,3 +66,20 @@ predicted_pd = model.predict_proba(input_row)[0, 1]
 
 st.subheader("Prediction")
 st.metric("Predicted probability of default (PD)", f"{predicted_pd:.1%}")
+
+# From the cost model: a repaid loan earns $2,000, a default loses $8,000.
+# Approving has positive expected value only when
+#   (1 - PD) * 2000 - PD * 8000 > 0, which works out to PD < 20%.
+GAIN_ON_REPAID = 2_000
+LOSS_ON_DEFAULT = 8_000
+APPROVAL_THRESHOLD = GAIN_ON_REPAID / (GAIN_ON_REPAID + LOSS_ON_DEFAULT)  # 0.20
+
+expected_value = (1 - predicted_pd) * GAIN_ON_REPAID - predicted_pd * LOSS_ON_DEFAULT
+
+st.subheader("Decision")
+if predicted_pd < APPROVAL_THRESHOLD:
+    st.success(f"APPROVE (PD is under the {APPROVAL_THRESHOLD:.0%} cutoff)")
+else:
+    st.error(f"DENY (PD is at or above the {APPROVAL_THRESHOLD:.0%} cutoff)")
+
+st.metric("Expected profit if approved", f"${expected_value:,.0f}")
