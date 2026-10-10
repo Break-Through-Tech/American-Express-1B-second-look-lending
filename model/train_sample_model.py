@@ -24,10 +24,25 @@ VALIDATION_START_WEEK = 80
 # is tiny so Streamlit Cloud can find it next to app.py at deploy time.
 MODEL_PATH = REPO_ROOT / "app" / "sample_model.joblib"
 
+# Select the model's input columns from the full merged table.
+# Used for training now and mirrored by the app later.
+#   prepare_features(train)
+def prepare_features(df):
+    # Use copy() so we never modify the caller's table.
+    X = df[FEATURES].copy()
+
+    # Booleans become 0/1 so training and the app feed 
+    # the same numeric type.
+    X["is_thin_file"] = X["is_thin_file"].astype(int)
+
+    return X
+
 def main():
     train = load_data.load_or_build_dataset("train")
-    print(train[FEATURES].dtypes)
-    print(f"Weeks in train: {train['WEEK_NUM'].min()} to {train['WEEK_NUM'].max()}")
+    X = prepare_features(train)
+    print(X.dtypes)
+    print(X.head())
+    print(f"Shape: {X.shape}")
 
 if __name__ == "__main__":
     main()
