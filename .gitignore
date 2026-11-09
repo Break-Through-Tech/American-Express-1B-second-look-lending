@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local Jupyter Notebook files meant for testing only
+*_local.ipynb

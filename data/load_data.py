@@ -227,6 +227,8 @@ def aggregate_tax_registry_a_1(df: pd.DataFrame) -> pd.DataFrame:
             tax_amount_sum=("amount_4527230A", sum_min_count),
             tax_amount_mean=("amount_4527230A", "mean"),
             tax_amount_max=("amount_4527230A", "max"),
+            tax_amount_std=("amount_4527230A", "std"),
+            tax_amount_min=("amount_4527230A", "min"),
         )
         .reset_index()
     )
@@ -262,6 +264,7 @@ def aggregate_person_1(df: pd.DataFrame) -> pd.DataFrame:
             person_income_sum=("mainoccupationinc_384A", sum_min_count),
             person_income_mean=("mainoccupationinc_384A", "mean"),
             person_income_max=("mainoccupationinc_384A", "max"),
+            person_income_min=("mainoccupationinc_384A", "min"),
             employment_mean=("empl_employedtotal_800L", "mean"),
             employment_max=("empl_employedtotal_800L", "max")
         )
@@ -308,6 +311,8 @@ def aggregate_applprev_1(df: pd.DataFrame) -> pd.DataFrame:
             prev_credit_amount_sum=("credamount_590A", sum_min_count),
             prev_credit_amount_mean=("credamount_590A", "mean"),
             prev_credit_amount_max=("credamount_590A", "max"),
+            prev_credit_amount_std=("credamount_590A", "std"),
+            prev_credit_amount_min=("credamount_590A", "min"),
             prev_approval_date_min=("approvaldate_319D", "min"),
             prev_approval_date_max=("approvaldate_319D", "max"),
         )
@@ -339,10 +344,34 @@ def load_credit_bureau_a_1(split: str) -> pd.DataFrame:
 
     return pd.concat([part_0, part_1], ignore_index=True)
 
+# Most common contract classification per case_id (the notebook's mode).
+# Ties go to the alphabetically first value, matching pandas .mode().iloc[0].
+# Uses counting + sorting instead of a per-group lambda, which is far faster.
+#   most_common_contract_class(train_credit_bureau_a_1)
+def most_common_contract_class(df: pd.DataFrame) -> pd.DataFrame:
+    col = "classificationofcontr_13M"
+    counts = (
+        df.dropna(subset=[col])
+        .groupby(["case_id", col])
+        .size()
+        .reset_index(name="n")
+        .sort_values(["case_id", "n", col], ascending=[True, False, True])
+    )
+    return counts.drop_duplicates("case_id")[["case_id", col]]
+
 # Aggregate credit_bureau_a_1 to one row per case_id.
 #   aggregate_credit_bureau_a_1(train_credit_bureau_a_1)
 def aggregate_credit_bureau_a_1(df: pd.DataFrame) -> pd.DataFrame:
-    return (
+    df = df.copy()
+
+    # 1 = late/overdue on that contract, 0 = not, NaN = unknown.
+    # NaN stays NaN so the mean ignores unknowns, matching the notebook.
+    dpd = df["pmts_dpdvalue_108P"]
+    overdue = df["overdueamountmax_950A"]
+    df["contract_late"] = (dpd > 0).astype(float).where(dpd.notna())
+    df["contract_overdue"] = (overdue > 0).astype(float).where(overdue.notna())
+
+    agg = (
         df.groupby("case_id")
         .agg(
             bureau_contract_count=("num_group1", "count"),
@@ -351,10 +380,17 @@ def aggregate_credit_bureau_a_1(df: pd.DataFrame) -> pd.DataFrame:
             bureau_credit_amount_max=("credamount_770A", "max"),
             bureau_overdue_amount_mean=("overdueamountmax_950A", "mean"),
             bureau_overdue_amount_max=("overdueamountmax_950A", "max"),
+            bureau_overdue_amount_sum=("overdueamountmax_950A", sum_min_count),
             bureau_dpd_max=("pmts_dpdvalue_108P", "max"),
             bureau_dpd_mean=("pmts_dpdvalue_108P", "mean"),
+            dpd_contract_rate=("contract_late", "mean"),
+            overdue_contract_rate=("contract_overdue", "mean"),
         )
         .reset_index()
+    )
+
+    return agg.merge(
+        most_common_contract_class(df), on="case_id", how="left", validate="one_to_one"
     )
 
 # Helper to compute the thin-file flag.
@@ -395,6 +431,11 @@ def load_credit_bureau_a_2(split: str) -> pd.DataFrame:
 # contract by summarizing its payment history.
 #   aggregate_credit_bureau_a_2_to_contract(train_credit_bureau_a_2)
 def aggregate_credit_bureau_a_2_to_contract(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    # 1 if this payment was overdue (> 0). NaN > 0 is False, so unknowns count as 0 here;
+    # they're excluded from the denominator via contract_overdue_valid_count.
+    df["payment_overdue"] = (df["pmts_overdue_1140A"] > 0).astype(int)
+
     return (
         df.groupby(["case_id", "num_group1"])
         .agg(
@@ -402,6 +443,7 @@ def aggregate_credit_bureau_a_2_to_contract(df: pd.DataFrame) -> pd.DataFrame:
             contract_overdue_sum=("pmts_overdue_1140A", sum_min_count),
             contract_overdue_max=("pmts_overdue_1140A", "max"),
             contract_overdue_valid_count=("pmts_overdue_1140A", "count"),
+            contract_overdue_positive_count=("payment_overdue", "sum"),
         )
         .reset_index()
     )
@@ -418,9 +460,18 @@ def aggregate_credit_bureau_a_2_to_case(contract_agg: pd.DataFrame) -> pd.DataFr
             bureau_a2_overdue_sum=("contract_overdue_sum", sum_min_count),
             bureau_a2_overdue_max=("contract_overdue_max", "max"),
             bureau_a2_overdue_valid_count=("contract_overdue_valid_count", "sum"),
+            bureau_a2_overdue_positive_count=("contract_overdue_positive_count", "sum"),
         )
         .reset_index()
     )
+
+    # Share of known payments that were overdue. 0/0 gives NaN (no known payments).
+    case_agg["pay_overdue_share"] = (
+        case_agg["bureau_a2_overdue_positive_count"] / case_agg["bureau_a2_overdue_valid_count"]
+    )
+
+    # Helper count only; drop it so the feature set matches the notebook's.
+    case_agg = case_agg.drop(columns="bureau_a2_overdue_positive_count")
 
     # Weighted mean, computed after. aggregation. This is the total overdue divided by
     # total valid records and not the average of each contract's own mean.
