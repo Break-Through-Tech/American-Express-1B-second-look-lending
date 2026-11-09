@@ -108,5 +108,11 @@ else:
     st.error(f"DENY (PD is at or above the {threshold:.0%} cutoff)")
 st.metric("Expected profit if approved", money(expected_value))
 
+# Show every field as text: the column mixes numbers, dates and codes,
+# and Streamlit's table format needs one type per column.
 with st.expander("All applicant fields"):
-    st.dataframe(pd.DataFrame([values]).T.rename(columns={0: "value"}))
+    fields = pd.DataFrame({
+        "field": list(values.keys()),
+        "value": ["" if v is None else str(v) for v in values.values()],
+    })
+    st.dataframe(fields, hide_index=True)
