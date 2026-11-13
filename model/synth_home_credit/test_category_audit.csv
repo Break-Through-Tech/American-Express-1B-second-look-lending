@@ -1,0 +1,8 @@
+Feature,Train Categories,Test Categories,Unseen Test Categories,Unseen Values
+education_927M,5,5,0,
+maritalstatus_703M,4,4,0,
+description_5085714M,6,6,0,
+person0_housing_type,5,5,0,
+person1_housing_type,5,5,0,
+prev_last_status,3,3,0,
+classificationofcontr_13M,6,6,0,

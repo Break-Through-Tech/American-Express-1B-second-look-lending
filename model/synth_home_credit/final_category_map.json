@@ -1,0 +1,50 @@
+{
+  "education_927M": [
+    "242b264b",
+    "6def22f0",
+    "10795bac",
+    "f937ecaa",
+    "2d4a2bc4"
+  ],
+  "maritalstatus_703M": [
+    "e78cb9c0",
+    "f62a4fc7",
+    "b58630a7",
+    "ea6fb4b5"
+  ],
+  "description_5085714M": [
+    "4dc79565",
+    "521190c5",
+    "5568a5e6",
+    "34bbcd2a",
+    "3802c3d2",
+    "6ef3de40"
+  ],
+  "person0_housing_type": [
+    "c93f8128",
+    "a19ac633",
+    "39303e4a",
+    "2339333a",
+    "97bb64e3"
+  ],
+  "person1_housing_type": [
+    "2339333a",
+    "39303e4a",
+    "c93f8128",
+    "97bb64e3",
+    "a19ac633"
+  ],
+  "prev_last_status": [
+    "a2839ee4",
+    "fa96ae9d",
+    "dedbd039"
+  ],
+  "classificationofcontr_13M": [
+    "ba38dde4",
+    "d8bf6dd7",
+    "01851564",
+    "54ddc605",
+    "fe64f125",
+    "6f5666c7"
+  ]
+}
