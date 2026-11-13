@@ -1,0 +1,41 @@
+{
+    "device": "cpu",
+    "best_params": {
+        "learning_rate": 0.02446132889127789,
+        "num_leaves": 50,
+        "max_depth": 7,
+        "min_child_samples": 330,
+        "min_split_gain": 0.19967378215835974,
+        "subsample": 0.8542703315240835,
+        "colsample_bytree": 0.8573450991017149,
+        "reg_alpha": 2.0472454826793616e-06,
+        "reg_lambda": 1.9047507638438828,
+        "cat_smooth": 8.333491643033206,
+        "min_data_per_group": 15
+    },
+    "features": 117,
+    "categorical_features": 7,
+    "n_estimators": 229,
+    "threshold": 0.1892771502137279,
+    "metrics": {
+        "ROC-AUC": 0.7680553879382399,
+        "Gini": 0.5361107758764798,
+        "KS": 0.394824611907433,
+        "PR-AUC": 0.4272123830189639,
+        "Brier Score": 0.12265765781191927,
+        "Constant-PD Brier": 0.14387303638273993,
+        "Log Loss": 0.39243605185195995,
+        "Constant-PD Log Loss": 0.4629200267928379,
+        "Accuracy": 0.6749258285355064,
+        "Precision": 0.3128905214526451,
+        "Recall / Default Capture": 0.7299350678033482,
+        "Specificity": 0.6633735923266729,
+        "F1": 0.4380210197076326,
+        "Approval Rate": 0.595111966329605,
+        "Rejection Rate": 0.40488803367039505,
+        "Default Rate Among Approved": 0.07876125574864416,
+        "Default Rate Among Rejected": 0.3128905214526451,
+        "Good Customer Rejection Rate": 0.336626407673327,
+        "Overall Holdout Default Rate": 0.17355739376423057
+    }
+}
