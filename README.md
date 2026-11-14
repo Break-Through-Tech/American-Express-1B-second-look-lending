@@ -1,6 +1,5 @@
-# Second Look Lending 
+# AMEX 1B - Second Look Lending 
 
-> 💡 **Note for the team:** This is just a template. Update the above title with your AI Studio Challenge Project name. Remove all guidance notes and example text in this template and populate this README with your own content. You can work on this README throughout AI Studio, and get feedback from your AI Studio Coach and Challenge Advisor before finalizing it.  
 
 ---
 
@@ -60,12 +59,6 @@ The dataset is not included in this repository because of its large file size. D
 ### 4. Run the Notebooks
 
 Open Jupyter Notebook or Google Colab and run the notebooks located in the `notebooks` folder.
-
-The main exploratory data analysis and feature-engineering notebook is:
-
-```text
-notebooks/feature_engineering_EDA.ipynb
-```
 
 ### 5. Run the Streamlit Application
 
