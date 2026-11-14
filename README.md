@@ -1,4 +1,4 @@
-# AI Studio Challenge Project Title
+# Second Look Lending 
 
 > 💡 **Note for the team:** This is just a template. Update the above title with your AI Studio Challenge Project name. Remove all guidance notes and example text in this template and populate this README with your own content. You can work on this README throughout AI Studio, and get feedback from your AI Studio Coach and Challenge Advisor before finalizing it.  
 
@@ -8,24 +8,24 @@
 
 | Name             | GitHub Handle | Contribution                                                             |
 |------------------|---------------|--------------------------------------------------------------------------|
-| Christopher Chow | @CC-001-CC    | TBD                                                                      |
-| James Shaw       | @jimxshaw     | TBD                                                                      |
-| Lauren Kim       | @laurenyk     | TBD                                                                      |
-| Nitya Konduru    | @nityak8      | TBD                                                                      |
-| Kelly Garcia     | @kelly2377    | TBD                                                                      |
-| Angela Mashuryan | @angelam118   | TBD                                                                      |
-| Samiha Haque     | @samiha3231   | TBD                                                                      |
+| Christopher Chow | @CC-001-CC    | Data Squashing, Model Training                                           |
+| James Shaw       | @jimxshaw     | Data Squashing, Data pipeline integration, Model Building                |
+| Lauren Kim       | @laurenyk     | EDA                                                                      |
+| Nitya Konduru    | @nityak8      | Data Preprocessing                                                       |
+| Kelly Garcia     | @kelly2377    | Data Exploration, Data Cleaning                                          |
+| Angela Mashuryan | @angelam118   | Data Exploration                                                         |
+| Samiha Haque     | @samiha3231   | Data Exploration, Feature Engineering, EDA, Model Training               |
 ---
 
 ## 🎯 **Project Highlights**
 
-**Example:**
-
-- Developed a machine learning model using `[model type/technique]` to address `[challenge project task]`.
-- Achieved `[key metric or result]`, demonstrating `[value or impact]` for `[host company]`.
-- Generated actionable insights to inform business decisions at `[host company or stakeholders]`.
-- Implemented `[specific methodology]` to address industry constraints or expectations.
-
+- Analyzed synthetic relational data representing approximately 1 million loan applications.
+- Developed a machine learning workflow to estimate applicants' probability of default.
+- Used a chronological split based on `WEEK_NUM` to reduce data leakage and evaluate performance on future applications.
+- Expanded the original feature set to 106 features through feature engineering and aggregation.
+- Investigated differences in default risk between thin-file applicants and applicants with established credit histories.
+- Developed a Streamlit application that demonstrates predicted default risk, approval decisions, and expected profit using synthetic applicant profiles.
+- Evaluated lending decisions using both predictive performance and business considerations.
 ---
 
 ## 👩🏽‍💻 **Setup and Installation**
@@ -38,83 +38,138 @@
 * How to access the dataset(s)
 * How to run the notebook or scripts
 
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Break-Through-Tech/American-Express-1B-second-look-lending.git
+cd American-Express-1B-second-look-lending
+```
+
+### 2. Install the Required Packages
+
+Install the project dependencies listed in `requirements.txt`:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Get the Data
+
+The dataset is not included in this repository because of its large file size. Download `synth_home_credit.zip` from the [shared project Google Drive folder](https://drive.google.com/drive/folders/1bJpa87n6HCwRR3Pvr5xqocNZrGo7dufT), then extract the files into your local data directory.
+
+### 4. Run the Notebooks
+
+Open Jupyter Notebook or Google Colab and run the notebooks located in the `notebooks` folder.
+
+The main exploratory data analysis and feature-engineering notebook is:
+
+```text
+notebooks/feature_engineering_EDA.ipynb
+```
+
+### 5. Run the Streamlit Application
+
+Launch the demonstration application with:
+
+```bash
+streamlit run app/app.py
+```
 ---
 
 ## 🏗️ **Project Overview**
 
-**Describe:**
+Our host company, American Express, challenged the team to explore second-look lending. The project focuses on applicants who may have been initially denied credit, including thin-file applicants with limited credit histories.
 
-- How this project is connected to the Break Through Tech AI Program
-- Your AI Studio host company and the project objective and scope
-- The real-world significance of the problem and the potential impact of your work
+The primary objectives are to:
+
+1. Estimate each applicant's probability of default.
+2. Compare machine learning models for default-risk prediction.
+3. Develop an approval policy that considers both expected profit and default risk.
+4. Evaluate model outcomes for thin-file and established-credit applicants.
+5. Explore how additional information can help identify creditworthy applicants who may otherwise be denied.
+
+The project uses an assumed gain of $2,000 for a repaid loan and a loss of $8,000 for a defaulted loan. These values produce a break-even default-probability threshold of 20%.
+
+A successful solution could support more informed lending decisions while examining opportunities to improve access for applicants with limited credit histories.
 
 ---
 
 ## 📊 **Data Exploration**
 
-**You might consider describing the following (as applicable):**
+The project uses reproducible synthetic consumer-lending data. 
 
-* The dataset(s) used: origin, format, size, type of data
-* Data exploration and preprocessing approaches
-* Insights from your Exploratory Data Analysis (EDA)
-* Challenges and assumptions when working with the dataset(s)
+The data include:
 
-**Potential visualizations to include:**
+- Approximately 1 million training applications
+- Approximately 200,000 out-of-time test applications
+- Numerical, categorical, date, and relational features
+- Multiple related tables connected through `case_id`
+- A binary target where `1` represents default and `0` represents repayment
+- An imbalanced target distribution, with approximately 19% defaults and 81% repayments
 
-* Plots, charts, heatmaps, feature visualizations, sample dataset images
+### Data Preparation
+
+The data preparation and feature-engineering process includes:
+
+- Joining related datasets using `case_id`
+- Aggregating previous-loan, tax, personal, and credit-bureau records
+- Creating count, mean, minimum, maximum, sum, and recency features
+- Creating affordability and leverage ratios
+- Creating credit-behavior and overdue-payment features
+- Adding missingness and data-coverage indicators
+- Identifying thin-file applicants
+- Examining hashed categorical variables, including education
+- Encoding categorical variables
+- Identifying highly correlated and redundant features
+- Handling missing and extreme values using training-data thresholds
+
+### Chronological Split
+
+The data were divided chronologically instead of randomly:
+
+- **Training set:** Weeks 0 through 79, containing 869,559 applications
+- **Validation set:** Weeks 80 through 91, containing 130,441 applications
+
+This split more closely represents predicting outcomes for future applicants and reduces the risk of data leakage.
+
+### EDA Findings
+
+- Thin-file applicants had a default rate of approximately **26.51%**.
+- Applicants with established credit histories had a default rate of approximately **16.42%**.
+- Feature engineering increased the dataset from 45 to 85 features.
+- One-hot encoding increased the modeling dataset to 104 columns.
+- Several features contained substantial missingness.
+- Some variables were highly or perfectly correlated and were flagged for removal.
+- Individual features showed weak linear correlations with the target, supporting the evaluation of models that can capture nonlinear relationships.
 
 ---
 
 ## 🧠 **Model Development**
 
-**You might consider describing the following (as applicable):**
-
-* Model(s) used (e.g., CNN with transfer learning, regression models)
-* Feature selection and Hyperparameter tuning strategies
-* Training setup (e.g., % of data for training/validation, evaluation metric, baseline performance)
-
+Currently in progress of building models and analyzing various ML algorithms. 
 
 ---
 
 ## 📈 **Results & Key Findings**
 
-**You might consider describing the following (as applicable):**
-
-* Performance metrics (e.g., Accuracy, F1 score, RMSE)
-* How your model performed
-* Insights from evaluating model fairness
-
-**Potential visualizations to include:**
-
-* Confusion matrix, precision-recall curve, feature importance plot, prediction distribution, outputs from fairness or explainability tools
+To be completed after modeling is finished.
 
 ---
 
 ## 🚀 **Next Steps**
-
-**You might consider addressing the following (as applicable):**
-
-* What are some of the limitations of your model?
-* What would you do differently with more time/resources?
-* What additional datasets or techniques would you explore?
+- Finalize models for thin-files and regular applicants 
+- Add final performance metrics and visualizations to the README.
+- Improve the Streamlit application's usability and documentation.
+- Evaluate the limitations and fairness implications of the final model.
 
 ---
 
 ## 📝 **License**
 
-Specify how your project can be used by others. Choose an appropriate license and link it here (e.g., MIT, Apache 2.0). Make sure your Challenge Advisor approves of the selected license type. 
-
-**Example:**
-This project is licensed under the MIT License.
-
----
-
-## 📄 **References** (Optional but encouraged)
-
-Cite relevant papers, articles, or resources that supported your project.
+To be done after speaking with the Challenge Advisor and Coach. 
 
 ---
 
 ## 🙏 **Acknowledgements** (Optional but encouraged)
 
-Thank your Challenge Advisor, host company representatives, TA, and others who supported your project.
+Thank you to our Challenge Advisor Saurabh Gupta, AI Studio Coach Swagath Babu, and American Express.
