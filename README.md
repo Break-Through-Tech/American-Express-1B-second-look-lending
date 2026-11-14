@@ -21,7 +21,7 @@
 - Analyzed synthetic relational data representing approximately 1 million loan applications.
 - Developed a machine learning workflow to estimate applicants' probability of default.
 - Used a chronological split based on `WEEK_NUM` to reduce data leakage and evaluate performance on future applications.
-- Expanded the original feature set to 106 features through feature engineering and aggregation.
+- Expanded the original feature set from 45 to 85 features through feature engineering and aggregation.
 - Investigated differences in default risk between thin-file applicants and applicants with established credit histories.
 - Developed a Streamlit application that demonstrates predicted default risk, approval decisions, and expected profit using synthetic applicant profiles.
 - Evaluated lending decisions using both predictive performance and business considerations.
@@ -131,7 +131,7 @@ This split more closely represents predicting outcomes for future applicants and
 
 ## 🧠 **Model Development**
 
-Currently in progress of building models and analyzing various ML algorithms. 
+Currently in progress of building models and analyzing various ML algorithms. Models are being evaluated using predictive-performance measures and business considerations. Final model-selection and performance details will be added after the team's evaluation is complete.
 
 ---
 
