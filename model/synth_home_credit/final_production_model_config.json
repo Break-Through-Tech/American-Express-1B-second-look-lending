@@ -1,0 +1,46 @@
+{
+  "architecture": "Global LightGBM + Segment-Specific Platt Calibration",
+  "architecture_status": "FINAL_PRODUCTION",
+  "predictive_model": "LightGBM",
+  "training_weeks": "0-91",
+  "calibration_training_method": "Forward temporal OOF",
+  "calibration_oof_weeks": "30-91",
+  "hidden_scoring_weeks": "92-107",
+  "model_feature_count": 144,
+  "categorical_feature_count": 7,
+  "n_estimators": 396,
+  "lightgbm_params": {
+    "objective": "binary",
+    "metric": "auc",
+    "verbosity": -1,
+    "random_state": 42,
+    "n_jobs": -1,
+    "learning_rate": 0.014296188907954576,
+    "num_leaves": 39,
+    "max_depth": 10,
+    "min_child_samples": 391,
+    "min_split_gain": 0.10386923140814276,
+    "subsample": 0.7186112587705437,
+    "colsample_bytree": 0.9537944428850209,
+    "reg_alpha": 0.17056423508472038,
+    "reg_lambda": 1.0616149925638703e-05,
+    "cat_smooth": 24.805670567161172,
+    "min_data_per_group": 78
+  },
+  "segment_rule": {
+    "has_cb_history=1": "Established history",
+    "has_cb_history=0": "Thin file"
+  },
+  "calibration": {
+    "Established history": {
+      "intercept": 0.03307868152773963,
+      "slope": 1.0171145934352899
+    },
+    "Thin file": {
+      "intercept": -0.130665669373999,
+      "slope": 1.0211978991713166
+    }
+  },
+  "final_score_column": "final_probability",
+  "hidden_has_labels": false
+}

@@ -1,0 +1,55 @@
+{
+  "algorithm": "LightGBM",
+  "routing_rule": {
+    "has_cb_history=1": "Established-history specialist",
+    "has_cb_history=0": "Thin-file specialist"
+  },
+  "development_weeks": "0-59",
+  "model_selection_validation_weeks": "60-74",
+  "blind_test_weeks": "75-91",
+  "blind_test_status": "UNTOUCHED",
+  "established_specialist": {
+    "cv_auc": 0.797982560849905,
+    "n_estimators": 95,
+    "params": {
+      "learning_rate": 0.030399043581519437,
+      "num_leaves": 22,
+      "max_depth": 9,
+      "min_child_samples": 521,
+      "min_split_gain": 0.2718100657423619,
+      "subsample": 0.8841473581443395,
+      "colsample_bytree": 0.9669117819346358,
+      "reg_alpha": 0.0016823178039175872,
+      "reg_lambda": 5.3956665131095e-05,
+      "cat_smooth": 30.216671948534817,
+      "min_data_per_group": 25,
+      "objective": "binary",
+      "metric": "auc",
+      "verbosity": -1,
+      "random_state": 42,
+      "n_jobs": -1
+    }
+  },
+  "thin_file_specialist": {
+    "cv_auc": 0.717625380010856,
+    "n_estimators": 160,
+    "params": {
+      "learning_rate": 0.012375192495931085,
+      "num_leaves": 56,
+      "max_depth": 9,
+      "min_child_samples": 561,
+      "min_split_gain": 0.2533936574740958,
+      "subsample": 0.87918460009235,
+      "colsample_bytree": 0.6584157100929916,
+      "reg_alpha": 0.0031388122645127506,
+      "reg_lambda": 0.2681416113275917,
+      "cat_smooth": 22.99538037646951,
+      "min_data_per_group": 149,
+      "objective": "binary",
+      "metric": "auc",
+      "verbosity": -1,
+      "random_state": 42,
+      "n_jobs": -1
+    }
+  }
+}

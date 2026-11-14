@@ -1,0 +1,36 @@
+{
+  "architecture": "Global LightGBM + Segment-Specific Platt",
+  "lightgbm_training_weeks": "0-74",
+  "calibration_oof_weeks": "30-74",
+  "blind_test_weeks": "75-91",
+  "blind_test_status": "OPENED_ONCE_AND_FINAL",
+  "lightgbm_n_estimators": 396,
+  "lightgbm_params": {
+    "objective": "binary",
+    "metric": "auc",
+    "verbosity": -1,
+    "random_state": 42,
+    "n_jobs": -1,
+    "learning_rate": 0.014296188907954576,
+    "num_leaves": 39,
+    "max_depth": 10,
+    "min_child_samples": 391,
+    "min_split_gain": 0.10386923140814276,
+    "subsample": 0.7186112587705437,
+    "colsample_bytree": 0.9537944428850209,
+    "reg_alpha": 0.17056423508472038,
+    "reg_lambda": 1.0616149925638703e-05,
+    "cat_smooth": 24.805670567161172,
+    "min_data_per_group": 78
+  },
+  "calibration": {
+    "Established history": {
+      "intercept": 0.03598538412311827,
+      "slope": 1.0196955026831482
+    },
+    "Thin file": {
+      "intercept": -0.11977658206708748,
+      "slope": 1.0332843367121622
+    }
+  }
+}

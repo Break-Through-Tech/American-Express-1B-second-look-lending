@@ -1,0 +1,32 @@
+{
+  "predictive_model": "Global LightGBM",
+  "development_weeks": "0-59",
+  "calibration_training_source": "Temporal OOF predictions from weeks 30-59",
+  "model_selection_validation_weeks": "60-74",
+  "blind_test_weeks": "75-91",
+  "blind_test_status": "UNTOUCHED",
+  "calibration_candidates": [
+    "Uncalibrated",
+    "Global Platt",
+    "Segment Platt",
+    "Segment Isotonic"
+  ],
+  "segment_rule": {
+    "has_cb_history=1": "Established history",
+    "has_cb_history=0": "Thin file"
+  },
+  "global_platt": {
+    "intercept": -0.04998787624036948,
+    "slope": 1.003618168160596
+  },
+  "segment_platt": {
+    "Established history": {
+      "intercept": 0.03223318892072554,
+      "slope": 1.020763920403983
+    },
+    "Thin file": {
+      "intercept": -0.11735304981301484,
+      "slope": 1.0325875597334482
+    }
+  }
+}
