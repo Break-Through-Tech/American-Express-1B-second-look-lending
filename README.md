@@ -10,7 +10,7 @@
 | Christopher Chow | @CC-001-CC    | Data Squashing, Model Training                                           |
 | James Shaw       | @jimxshaw     | Data Squashing, Data pipeline integration, Model Building                |
 | Lauren Kim       | @laurenyk     | EDA                                                                      |
-| Nitya Konduru    | @nityak8      | Data Preprocessing                                                       |
+| Nitya Konduru    | @nityak8      | Data Preprocessing, Data Cleaning                                        |
 | Kelly Garcia     | @kelly2377    | Data Exploration, Data Cleaning                                          |
 | Angela Mashuryan | @angelam118   | Data Exploration                                                         |
 | Samiha Haque     | @samiha3231   | Data Exploration, Feature Engineering, EDA, Model Training               |
