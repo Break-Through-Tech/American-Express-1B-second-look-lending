@@ -1,0 +1,8 @@
+Metric,Count,Rate
+Applicants near 20% gate,31582,0.1708280144529306
+Applicants above disagreement hurdle,128380,0.6944113892555009
+Gate active,878,0.004749129146022199
+Final lending decisions changed,631,0.003413098509271079
+Thin-file gate active,493,0.0089032560995431
+Established gate active,385,0.0029729041026076617
+Thin-file attempted moves toward higher risk,22378,0.40413197767865205

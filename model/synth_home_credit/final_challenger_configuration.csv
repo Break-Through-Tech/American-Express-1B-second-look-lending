@@ -1,0 +1,2 @@
+boundary_strength,boundary_sigma,boundary_default_extra,boundary_trees,use_targeted_interactions,stack_C,stack_variant,stack_columns,boundary_refinement_source,primary_challenger_frozen_on_development
+1.060239891475224,0.06966908051082553,0.08212762684840902,530,False,0.002345096113030026,segment_disagreement,mean_logit | boundary_delta | xgb_delta | cat_delta | model_std | model_range | thin | thin_x_boundary_delta | thin_x_xgb_delta | thin_x_cat_delta | thin_x_model_std,Stage 2 tuned LightGBM,Boundary + disagreement stack

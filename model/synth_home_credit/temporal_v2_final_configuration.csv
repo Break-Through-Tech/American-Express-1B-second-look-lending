@@ -1,0 +1,13 @@
+Component,Value
+Model half-life,170
+Model floor,0.6499766216346642
+Normalize model weights within segment,True
+Recency trees,190
+Recency learning rate,0.028154142812306687
+Recency num leaves,41
+Recency max depth,9
+Recency min child samples,300
+Meta C,0.11530395472363043
+Calibration half-life,50.768466401963835
+Calibration floor,0.8549515868716863
+Decision threshold,0.2

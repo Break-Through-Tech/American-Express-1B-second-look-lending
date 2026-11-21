@@ -1,0 +1,9 @@
+Candidate,Decision Change,Applicants,Profit Impact
+Boundary-weighted LightGBM,Good borrowers newly approved,344,688000.0
+Boundary-weighted LightGBM,Defaults newly approved,107,-856000.0
+Boundary-weighted LightGBM,Defaults avoided,639,5112000.0
+Boundary-weighted LightGBM,Good borrowers newly denied,2641,-5282000.0
+Boundary + disagreement stack,Good borrowers newly approved,485,970000.0
+Boundary + disagreement stack,Defaults newly approved,112,-896000.0
+Boundary + disagreement stack,Defaults avoided,308,2464000.0
+Boundary + disagreement stack,Good borrowers newly denied,1208,-2416000.0

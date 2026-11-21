@@ -1,0 +1,9 @@
+Candidate,Decision Change,Applicants,Profit Impact
+Ungated disagreement stack,Good borrowers newly approved,412,824000.0
+Ungated disagreement stack,Defaults newly approved,91,-728000.0
+Ungated disagreement stack,Defaults avoided,324,2592000.0
+Ungated disagreement stack,Good borrowers newly denied,1326,-2652000.0
+Fairness-constrained gated stack,Good borrowers newly approved,398,796000.0
+Fairness-constrained gated stack,Defaults newly approved,83,-664000.0
+Fairness-constrained gated stack,Defaults avoided,33,264000.0
+Fairness-constrained gated stack,Good borrowers newly denied,165,-330000.0

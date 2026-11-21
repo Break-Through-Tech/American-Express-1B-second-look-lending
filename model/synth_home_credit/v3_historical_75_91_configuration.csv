@@ -1,0 +1,2 @@
+train_end_week,test_start_week,test_end_week,decision_threshold,stack_family,stack_variant,stack_C,calibration_mode,beta_C,gate_width,disagreement_quantile,refreshed_disagreement_threshold,gate_alpha,thin_upward_multiplier,gate_mode,base_lgb_trees,historical_source
+74,75,91,0.2,3model,segment_disagreement,0.022587610988023383,beta_segment,0.05906341980653921,0.04,0.25,0.002967672957886066,1.0,0.0,flip_only,396,df_redesign

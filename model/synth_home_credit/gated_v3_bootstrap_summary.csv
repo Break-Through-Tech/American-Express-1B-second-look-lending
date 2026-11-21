@@ -1,0 +1,3 @@
+Candidate,Observed Delta,CI Low,CI High,P Delta > 0
+Ungated disagreement stack,36000.0,-354000.0,418000.0,0.5766
+Fairness-constrained gated stack,66000.0,-100000.0,242000.0,0.77
